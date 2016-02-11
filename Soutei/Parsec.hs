@@ -2,10 +2,10 @@
 
 module Soutei.Parsec where
 
-import Text.ParserCombinators.Parsec
-import Control.Monad.Identity
+import           Control.Monad.Identity
+import           Text.ParserCombinators.Parsec
 
-junk p      = p >> return ()
+junk p = p >> return ()
 
 parseM :: Monad m => Parser a -> FilePath -> String -> m a
 parseM p f s = handleM (parse p f s)

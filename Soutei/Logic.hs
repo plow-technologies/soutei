@@ -1,4 +1,4 @@
-{-# LANGUAGE DoRec, ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- $HeadURL: https://svn.metnet.navy.mil/svn/metcast/Mserver/trunk/soutei/haskell/Soutei/Logic.hs $
 -- $Id: Logic.hs 2947 2012-09-14 08:26:08Z oleg.kiselyov $
@@ -12,17 +12,17 @@ module Soutei.Logic (
   prove, proveResults, clausesQuery, funcQuery
 ) where
 
-import Control.Monad
-import Control.Monad.Identity
-import Control.Monad.State
-import Control.Parallel.Strategies
-import Data.Maybe (isJust)
-import Test.QuickCheck
+import           Control.Monad
+import           Control.Monad.Identity
+import           Control.Monad.State
+import           Control.Parallel.Strategies
+import           Data.Maybe                  (isJust)
+import           Test.QuickCheck
 
-import Soutei.FBackTrackT (Stream, yield, runM)
-import Soutei.Syntax (assertionL, headL)
-import Soutei.Parsec (uncheckedParse)
-import Soutei.Soutei
+import           Soutei.FBackTrackT          (Stream, runM, yield)
+import           Soutei.Parsec               (uncheckedParse)
+import           Soutei.Soutei
+import           Soutei.Syntax               (assertionL, headL)
 
 {-
   Overall evaluation strategy:
@@ -41,7 +41,7 @@ import Soutei.Soutei
     earlier instantiations).  So we keep an integer counter that is
     incremented on each instantiation, and give fresh names to rule
     variables by adding their offsets to the counter.
-    
+
     We maintain an environment of variable bindings and use unification in
     the usual way.  However, by analyzing variable use patterns (details
     below), we perform some optimizations that minimize the size of the
@@ -234,7 +234,7 @@ compile h b = runState compile' 0 where
 
 compileHead :: [SynTerm] ->
           State Int ([Term HeadVar], [(SynVar, (HeadVar, FrameVar, BoundVar))])
-compileHead h = do rec (h', (headVars, dups')) <-
+compileHead h = do (h', (headVars, dups')) <-
                          runStateT (mapM (comp dups') (zip [0..] h)) ([], [])
                    return (h', headVars)
  where
@@ -250,7 +250,7 @@ compileHead h = do rec (h', (headVars, dups')) <-
 compileBody :: [(SynVar, (HeadVar, FrameVar, BoundVar))] -> [SynBodyAtom] ->
                   State Int [BodyAtom BodyVar]
 compileBody headVars b =
-  do rec (b', (_, dups')) <-
+  do (b', (_, dups')) <-
            runStateT (mapM (compileAtom (const Only) headVars dups') b) ([], [])
      return b'
 
@@ -261,7 +261,7 @@ compileAtom :: FunctorM f => (FrameVar -> BodyUse) ->
                 [SynVar] -> f (Var SynVar) ->
                 StateT ([(SynVar, FrameVar)], [SynVar]) (State Int) (f BodyVar)
 compileAtom freeOnlyf headVars bodyDups' atom = do
-  rec (atom', atomDups') <- runStateT (fmapM (comp atomDups') atom) []
+  (atom', atomDups') <- runStateT (fmapM (comp atomDups') atom) []
   return atom'
  where
   comp atomDups' Anon = liftM (Free . freeOnlyf) (lift (lift newFV))
@@ -771,13 +771,13 @@ acyclic (Env e) = acyclic' e [] where
 prop_acyclic :: Env -> Term RunVar -> Term RunVar -> Property
 prop_acyclic e t1 t2 = acyclic e ==>
       let r = testRunUnify t1 t2 e
-      in  not (null r) ==> case r of 
+      in  not (null r) ==> case r of
                               [e']  -> acyclic e'
 
 prop_unify :: Env -> Term RunVar -> Term RunVar -> Property
 prop_unify e t1 t2 = acyclic e ==>
       let r = testRunUnify t1 t2 e
-      in  not (null r) ==> case r of 
+      in  not (null r) ==> case r of
             [e']  ->  let t1' = subst e' t1
                           t2' = subst e' t2
                       in  t1' == t2'

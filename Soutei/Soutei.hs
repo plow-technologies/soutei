@@ -6,10 +6,11 @@
 
 module Soutei.Soutei where
 
-import Control.Monad
-import Data.Bits
-import Data.Word
-import Test.QuickCheck (Arbitrary(..), choose, oneof, sized, Property, forAll)
+import           Control.Monad
+import           Data.Bits
+import           Data.Word
+import           Test.QuickCheck (Arbitrary (..), Property, choose, forAll,
+                                  oneof, sized)
 
 -- The Soutei language
 
@@ -118,7 +119,7 @@ bytesToIP4Addr = IP4Addr . bytesToBits 4
 ip4AddrToBytes :: IP4Addr -> [Word8]
 ip4AddrToBytes (IP4Addr addr) = bitsToBytes 4 addr
 
-bytesToBits :: Bits a => Int -> [Word8] -> a
+bytesToBits :: (Bits a,Num a) => Int -> [Word8] -> a
 bytesToBits = toBits 0 where
   toBits acc 0 []     = acc
   toBits acc n (b:bs) = toBits (shiftL acc 8 .|. fromIntegral b) (n-1) bs
