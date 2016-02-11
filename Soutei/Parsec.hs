@@ -5,6 +5,7 @@ module Soutei.Parsec where
 import           Control.Monad.Identity
 import           Text.ParserCombinators.Parsec
 
+junk :: Monad m => m a -> m ()
 junk p = p >> return ()
 
 parseM :: Monad m => Parser a -> FilePath -> String -> m a

@@ -1,5 +1,10 @@
-{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies #-}
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts       #-}
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE TypeSynonymInstances   #-}
+
+
 -- $HeadURL: https://svn.metnet.navy.mil/svn/metcast/Mserver/trunk/soutei/haskell/Soutei/Check.hs $
 -- $Id: Check.hs 2947 2012-09-14 08:26:08Z oleg.kiselyov $
 -- svn propset svn:keywords "HeadURL Id" filename
@@ -9,15 +14,16 @@ module Soutei.Check (
   checkRules, groupRules
 ) where
 
-import Prelude hiding (lookup)
-import Control.Monad.Reader
-import Control.Monad.Writer
-import Data.List (transpose)
-import Data.Map (Map, empty, lookup, member, insert, insertWith, fromList)
+import           Control.Monad.Reader
+import           Control.Monad.Writer
+import           Data.List            (transpose)
+import           Data.Map             (Map, empty, fromList, insert, insertWith,
+                                       lookup, member)
+import           Prelude              hiding (lookup)
 
-import Soutei.Parsec (uncheckedParse)
-import Soutei.Soutei
-import Soutei.Syntax
+import           Soutei.Parsec        (uncheckedParse)
+import           Soutei.Soutei
+import           Soutei.Syntax
 
 type CtxModes = Map Pred [ArgMode]
 
@@ -70,13 +76,13 @@ instance Show TermMode where
 type ModeEnv = Map SynVar TermMode
 
 {-
-   At the top level, we pass in a data structure that maps built-in predicates onto their 
+   At the top level, we pass in a data structure that maps built-in predicates onto their
    argument modes; this never changes.
-   
+
    For each predicate:
       First, mode-check each clause:
         For each body atom:
-         Look at the context for the atom: 
+         Look at the context for the atom:
             * If it's "application", then either the predicate is
          built-in (so we look up its argument modes) or it's not (so
          we assign all arguments the mode (P S): we're saying that in
@@ -101,7 +107,7 @@ type ModeEnv = Map SynVar TermMode
              * If arg is a named variable and the mode is required, then we look
              up arg in the environment and check that the mode that's already in
              the environment contains at least as much information as mode does.
-            
+
       Second, determine the modes for the head, using the information we just
       computed about the variables in the body. The goal is to ensure that
       every argument in the head provides some mode.
