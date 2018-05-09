@@ -1,10 +1,12 @@
 {-# OPTIONS -fglasgow-exts #-}
+{-# LANGUAGE CPP #-}
 
 -- A monad TRANSFORMER for BFS or DFS traversal
 -- The function dfs'or'bfs2 below determines which is which
 
 module Soutei.GBBFS1 (Stream, yield, runM) where
 
+import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Identity
@@ -14,6 +16,7 @@ import Data.IORef -- for tests
 --import Debug.Trace -- for tests
 import System.IO.Unsafe -- because Debug.Trace.trace doesn't work after interr
 import System.Mem.StableName -- for tests
+
 trace str x = unsafePerformIO (putStrLn str) `seq` x
 
 
@@ -22,8 +25,19 @@ trace str x = unsafePerformIO (putStrLn str) `seq` x
 dfs'or'bfs2 r1 r2 = r2 ++ r1
 
 
-newtype Monad m => Stream m a = Stream{unStream :: m (StreamE m a)}
+newtype Stream m a = Stream{unStream :: m (StreamE m a)}
 type StreamE m a = (Maybe a, [Stream m a])
+
+instance Functor m => Functor (Stream m) where
+  fmap f (Stream ms) = Stream (fmap (\(ma,lsa) -> (fmap f ma, fmap (fmap f) lsa)) ms)
+
+#if __GLASGOW_HASKELL__ < 710
+instance (Functor m, Monad m) => Applicative (Stream m) where
+#else
+instance Monad m => Applicative (Stream m) where
+#endif
+  pure x = Stream (return (Just x, []))
+  (<*>) = ap
 
 instance Monad m => Monad (Stream m) where
   return x = Stream (return (Just x, []))
@@ -37,6 +51,13 @@ instance Monad m => Monad (Stream m) where
 		      in unStream (mplus (f x) 
 				         (Stream (return (Nothing, q'))))
 
+#if __GLASGOW_HASKELL__ < 710
+instance (Functor m, Monad m) => Alternative (Stream m) where
+#else
+instance Monad m => Alternative (Stream m) where
+#endif
+  empty = mzero
+  (<|>) = mplus
 
 instance Monad m => MonadPlus (Stream m) where
   mzero = Stream (return (Nothing, []))

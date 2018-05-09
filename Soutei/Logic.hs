@@ -1,4 +1,4 @@
-{-# LANGUAGE DoRec, ScopedTypeVariables #-}
+{-# LANGUAGE RecursiveDo, ScopedTypeVariables #-}
 
 -- $HeadURL: https://svn.metnet.navy.mil/svn/metcast/Mserver/trunk/soutei/haskell/Soutei/Logic.hs $
 -- $Id: Logic.hs 2947 2012-09-14 08:26:08Z oleg.kiselyov $

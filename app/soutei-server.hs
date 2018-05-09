@@ -1,9 +1,10 @@
 -- Soutei server
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
 
 import Prelude hiding (log)
-import Control.Exception (bracket)
+import Control.Exception as Exception (bracket, catch, SomeException)
 import Control.Monad (liftM)
 import Network
 import System.Environment (getArgs)
@@ -57,9 +58,9 @@ main = do getArgs >>= \args -> case args of
                 let portID = case reads port of
                               ((n, ""):_) -> PortNumber (fromIntegral n)
                               _           -> Service port
-                as <- fromDataDir logErr dataDir `IO.catch` startError
-                loadSysCtx initFile as `IO.catch` startError
-                bracket (listenOn portID `IO.catch` startError) sClose $
+                as <- fromDataDir logErr dataDir `Exception.catch` startError
+                loadSysCtx initFile as `Exception.catch` startError
+                bracket (listenOn portID `Exception.catch` startError) sClose $
                   \s -> do  logDate "Soutei $Id: soutei-server.hs 2155 2009-05-19 03:40:47Z oleg.kiselyov $ started"
                             loop as s
             _ -> useError "Exactly three arguments required."
@@ -68,7 +69,7 @@ loop :: Assertions -> Socket -> IO ()
 loop as s = do
   logDate "Listening ..."
   bracket (accept s)
-          (\(h,_,_) -> hClose h `IO.catch` logErr) $ \(h,_,_) -> do
+          (\(h,_,_) -> hClose h `Exception.catch` logErr) $ \(h,_,_) -> do
     logDate "Connected"
     req <- hGetContents h
     se <- parseM (Sexpr.whiteSpace >> Sexpr.cons term) "request" req
@@ -76,12 +77,12 @@ loop as s = do
     Sexpr.toList se >>= \l -> case l of
       Sexpr.Atom (Val reqId) : Sexpr.Atom (Val (SString cmd)) : rest -> do
         r <- serveRequest as cmd rest
-              `IO.catch` \e -> logErr e >> return (boolToSexpr False)
+              `Exception.catch` \e -> logErr e >> return (boolToSexpr False)
         let rsp = show (Sexpr.Atom (Const' reqId) `Sexpr.Cons` r)
         log ("<-- " ++ rsp)
         hPutStrLn h rsp
       _ -> fail "malformed request"
-   `IO.catch` logErr
+   `Exception.catch` logErr
   loop as s
 
 log msg = log' msg
@@ -91,7 +92,7 @@ logDate msg = do  t <- getClockTime >>= toCalendarTime
                             ++ msg)
 logErr err = log' (if isUserError err then ioeGetErrorString err
                                       else show err)
-log' msg = hPutStrLn stderr msg `IO.catch` \e -> exitWith (ExitFailure 74)
+log' msg = hPutStrLn stderr msg `Exception.catch` \(e :: SomeException) -> exitWith (ExitFailure 74)
 
 data Const' = Const' Const
             | Bool' Bool

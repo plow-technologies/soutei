@@ -1,5 +1,7 @@
 {- Haskell98! -}
 
+{-# LANGUAGE CPP #-}
+
 -- $HeadURL: https://svn.metnet.navy.mil/svn/metcast/Mserver/trunk/soutei/haskell/Soutei/FBackTrackT.hs $
 -- $Id: FBackTrackT.hs 2926 2012-09-07 04:43:30Z oleg.kiselyov $
 -- svn propset svn:keywords "HeadURL Id" filename
@@ -17,6 +19,7 @@
 
 module Soutei.FBackTrackT (Stream, yield, runM) where
 
+import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Identity
@@ -25,8 +28,24 @@ data StreamE m a = Nil | One a |
 		   Choice a (Stream m a) | 
 		   Incomplete (Stream m a)
 
-newtype Stream m a = Stream{unStream :: m (StreamE m a)}
+instance Functor m => Functor (StreamE m) where
+  fmap _ Nil = Nil
+  fmap f (One a) = One (f a)
+  fmap f (Choice a as) = Choice (f a) (fmap f as)
+  fmap f (Incomplete as) = Incomplete (fmap f as)
 
+newtype Stream m a = Stream {unStream :: m (StreamE m a)}
+
+instance Functor m => Functor (Stream m) where
+  fmap f (Stream as) = Stream (fmap (fmap f) as)
+
+#if __GLASGOW_HASKELL__ < 710 
+instance (Functor m, Monad m) => Applicative (Stream m) where
+#else
+instance Monad m => Applicative (Stream m) where
+#endif
+  pure = Stream . return . One
+  (<*>) = ap
 
 instance Monad m => Monad (Stream m) where
   return = Stream . return . One
@@ -40,6 +59,14 @@ instance Monad m => Monad (Stream m) where
 
 yield :: Monad m => Stream m a -> Stream m a
 yield = Stream . return . Incomplete
+
+#if __GLASGOW_HASKELL__ < 710 
+instance (Functor m, Monad m) => Alternative (Stream m) where
+#else
+instance Monad m => Alternative (Stream m) where
+#endif
+  empty = mzero
+  (<|>) = mplus
 
 instance Monad m => MonadPlus (Stream m) where
   mzero = Stream $ return Nil

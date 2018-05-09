@@ -118,7 +118,7 @@ bytesToIP4Addr = IP4Addr . bytesToBits 4
 ip4AddrToBytes :: IP4Addr -> [Word8]
 ip4AddrToBytes (IP4Addr addr) = bitsToBytes 4 addr
 
-bytesToBits :: Bits a => Int -> [Word8] -> a
+bytesToBits :: (Num a, Bits a) => Int -> [Word8] -> a
 bytesToBits = toBits 0 where
   toBits acc 0 []     = acc
   toBits acc n (b:bs) = toBits (shiftL acc 8 .|. fromIntegral b) (n-1) bs

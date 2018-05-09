@@ -14,6 +14,7 @@ module Soutei.Assertions (
 ) where
 
 import Prelude hiding (lookup)
+import Control.Exception as Exception
 import Control.Monad
 import Control.Monad.Identity
 import Control.Monad.Trans
@@ -58,7 +59,7 @@ fromDataDir err dataDir = do
                              (\ctx -> do  s <- loadA dataDir ctx
                                           rules <- parseA "data store" s
                                           uncheckedIndexRules rules
-                                      `IO.catch` \e -> err e >> return empty)
+                                      `Exception.catch` \e -> err e >> return empty)
   lirs <- Lirs.new storage 990 1000
   return (Assertions (Lirs.put lirs) (Lirs.get lirs) stdAppPrims)
 
@@ -72,7 +73,7 @@ fromDataDirWithActions err readA writeA = do
                              (\ctx -> do  s <- readA ctx
                                           rules <- parseA "data store" s
                                           uncheckedIndexRules rules
-                                      `IO.catch` \e -> err e >> return empty)
+                                      `Exception.catch` \e -> err e >> return empty)
   lirs <- Lirs.new storage 990 1000
   return (Assertions (Lirs.put lirs) (Lirs.get lirs) stdAppPrims)
 

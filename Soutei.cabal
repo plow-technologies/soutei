@@ -12,27 +12,29 @@ Description:
     conditional delegation.
     http://soutei.sourceforge.net/
     http://github.com/mstone/soutei
-License:             GPLv2
+License:             GPL-2
 Author:              Oleg Kiselyov <oleg@okmij.org>, Andrew Pimlott <andrew@pimlott.net>
 Maintainer:          Michael Stone <mistone@akamai.com>
 Stability:           experimental
 Build-Type:          Simple
 
 Library
-  Exposed-Modules:   Soutei.Soutei
-                     Soutei.Assertions,
-                     Soutei.Check,
-                     Soutei.Client,
-                     Soutei.FBackTrack,
-                     Soutei.FBackTrackT,
-                     Soutei.GBBFS,
-                     Soutei.GBBFS1,
-                     Soutei.Lirs,
-                     Soutei.Logic,
-                     Soutei.Parsec,
-                     Soutei.Sexpr,
-                     Soutei.Syntax
-  Build-Depends:     base >= 4.0,
+  Exposed-Modules:
+    Soutei.Soutei
+    Soutei.Assertions
+    Soutei.Check
+    Soutei.Client
+    Soutei.FBackTrack
+    Soutei.FBackTrackT
+    Soutei.GBBFS
+    Soutei.GBBFS1
+    Soutei.Lirs
+    Soutei.Logic
+    Soutei.Parsec
+    Soutei.Sexpr
+    Soutei.Syntax
+
+  Build-Depends:     base >= 4,
                      containers -any,
                      directory -any,
                      mtl -any,
@@ -48,6 +50,7 @@ Library
   Default-Language:  Haskell2010
 
 Executable soutei-server
+  Hs-Source-Dirs:    app
   Main-Is:           soutei-server.hs
   Other-Modules:     Soutei.Soutei
   Build-Depends:     base >= 4.0,
@@ -66,6 +69,7 @@ Executable soutei-server
   Default-Language:  Haskell2010
 
 Executable soutei-cli
+  Hs-Source-Dirs:    app
   Main-Is:           soutei-server.hs
   Other-Modules:     Soutei.Soutei
   Build-Depends:     base >= 4.0,

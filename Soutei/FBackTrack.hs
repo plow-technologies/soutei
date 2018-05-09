@@ -6,11 +6,23 @@
 
 module Soutei.FBackTrack where
 
+import Control.Applicative
 import Control.Monad
 
 data Stream a = Nil | One a | Choice a (Stream a) | Incomplete (Stream a)
 	      | IncompleteR (Stream a)
     deriving Show
+
+instance Functor Stream where
+  fmap _ Nil = Nil
+  fmap f (One a) = One (f a)
+  fmap f (Choice a as) = Choice (f a) (fmap f as)
+  fmap f (Incomplete as) = Incomplete (fmap f as)
+  fmap f (IncompleteR as) = IncompleteR (fmap f as)
+
+instance Applicative Stream where
+  pure = One
+  (<*>) = ap
 
 instance Monad Stream where
   return = One
@@ -25,6 +37,10 @@ instance Monad Stream where
 -}
   IncompleteR i >>= f = IncompleteR (i >>= f)
   Incomplete i >>= f = Incomplete (i >>= f)
+
+instance Alternative Stream where
+  empty = mzero
+  (<|>) = mplus
 
 instance MonadPlus Stream where
   mzero = Nil
